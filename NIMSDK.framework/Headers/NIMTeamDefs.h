@@ -228,4 +228,20 @@ typedef void(^NIMTeamApplyHandler)(NSError * __nullable error, NIMTeamApplyStatu
  */
 typedef void(^NIMTeamFetchInviterAccidsHandler)(NSError * __nullable error, NSDictionary<NSString *, NSString *> * __nullable inviters);
 
+/**
+ *  拉取所有群信息Block
+ *
+ *  @param error 错误,如果成功则error为nil
+ *  @param teams  群信息
+ */
+typedef void(^NIMTeamFetchTeamsHandler)(NSError * __nullable error, NSArray<NIMTeam *> * __nullable teams);
+/**
+ *  根据群ID列表批量获取群信息block
+ *
+ *  @param error         错误,如果成功则error为nil
+ *  @param teams         获取成功的群组信息列表
+ *  @param failedUserIds 获取失败的群ID列表
+ */
+typedef void(^NIMTeamFetchTeamInfoListHandler)(NSError * __nullable error, NSArray<NIMTeam *> * __nullable teams, NSArray<NSString *> * __nullable failedTeamIds);
+
 #endif

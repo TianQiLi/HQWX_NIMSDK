@@ -28,6 +28,7 @@
 #import "NIMSession.h"
 #import "NIMRecentSession.h"
 #import "NIMMessageSearchOption.h"
+#import "NIMIncompleteSessionInfo.h"
 
 
 /**
@@ -55,21 +56,30 @@
 #import "NIMMessageChatroomExtension.h"
 #import "NIMChatroomMember.h"
 #import "NIMChatroomMemberRequest.h"
+#import "NIMChatroomTagRequest.h"
 #import "NIMChatroomUpdateRequest.h"
 #import "NIMChatroomQueueRequest.h"
 #import "NIMChatroomBeKickedResult.h"
+#import "NIMChatroomCdnTrackInfo.h"
 
 /**
  *  消息定义
  */
 #import "NIMMessage.h"
+#import "NIMAddEmptyRecentSessionBySessionOption.h"
 #import "NIMSystemNotification.h"
 #import "NIMRevokeMessageNotification.h"
 #import "NIMDeleteMessagesOption.h"
+#import "NIMDeleteMessageOption.h"
 #import "NIMBroadcastMessage.h"
 #import "NIMImportedRecentSession.h"
 #import "NIMClearMessagesOption.h"
+#import "NIMDeleteRecentSessionOption.h"
 #import "NIMBatchDeleteMessagesOption.h"
+#import "NIMRevokeMessageOption.h"
+#import "NIMSessionDeleteAllRemoteMessagesOptions.h"
+#import "NIMSessionDeleteAllRemoteMessagesInfo.h"
+
 
 /**
  *  推送定义
@@ -80,6 +90,7 @@
  *  登录定义
  */
 #import "NIMLoginClient.h"
+#import "NIMLoginKickoutResult.h"
 
 /**
  *  文档转码信息
@@ -134,6 +145,7 @@
 #import "NIMAntispamManagerProtocol.h"
 #import "NIMSignalManagerProtocol.h"
 #import "NIMPassThroughManagerProtocol.h"
+#import "NIMChatExtendManagerProtocol.h"
 
 /**
  *  SDK业务类
@@ -155,4 +167,35 @@
  *  透传代理定义
  */
 #import "NIMPassThroughOption.h"
+
+
+/**
+ *  Thread Talk & 快捷回复
+ */
+#import "NIMThreadTalkFetchOption.h"
+#import "NIMChatExtendBasicInfo.h"
+#import "NIMQuickComment.h"
+#import "NIMThreadTalkFetchResult.h"
+
+/**
+ * 收藏
+ */
+#import "NIMCollectInfo.h"
+#import "NIMCollectQueryOptions.h"
+#import "NIMAddCollectParams.h"
+
+/**
+ * 置顶会话
+ */
+#import "NIMStickTopSessionInfo.h"
+#import "NIMAddStickTopSessionParams.h"
+#import "NIMSyncStickTopSessionResponse.h"
+#import "NIMLoadRecentSessionsOptions.h"
+
+/**
+ * PIN
+ */
+#import "NIMMessagePinItem.h"
+#import "NIMSyncMessagePinRequest.h"
+#import "NIMSyncMessagePinResponse.h"
 

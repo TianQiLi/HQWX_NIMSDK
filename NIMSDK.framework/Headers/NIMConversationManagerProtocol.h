@@ -16,14 +16,22 @@ NS_ASSUME_NONNULL_BEGIN
 @class NIMRecentSessionOption;
 @class NIMHistoryMessageSearchOption;
 @class NIMMessageSearchOption;
+@class NIMDeleteMessageOption;
 @class NIMDeleteMessagesOption;
 @class NIMImportedRecentSession;
 @class NIMMessageReceipt;
 @class NIMTeamMessageReceiptDetail;
 @class NIMClearMessagesOption;
+@class NIMDeleteRecentSessionOption;
 @class NIMBatchDeleteMessagesOption;
 @class NIMFetchServerSessionOption;
 @class NIMMessageServerRetrieveOption;
+@class NIMIncompleteSessionInfo;
+@class NIMSessionDeleteAllRemoteMessagesOptions;
+@class NIMSessionDeleteAllRemoteMessagesInfo;
+@class NIMAddEmptyRecentSessionBySessionOption;
+@class NIMMessageFullKeywordSearchOption;
+
 /**
  *  读取服务器消息记录block
  *
@@ -68,8 +76,26 @@ typedef void(^NIMImportRecentSessionsBlock)(NSError * __nullable error, NSArray<
  *
  *  @param error  错误,如果成功则error为nil
  */
+typedef void(^NIMRemoveRemoteMessageBlock)(NSError * __nullable error);
+
+/**
+ *  标记远端会话Block
+ *
+ *  @param error  错误,如果成功则error为nil
+ */
 typedef void(^NIMRemoveRemoteSessionBlock)(NSError * __nullable error);
 
+
+/**
+ * 清空历史消息block
+ *  @param error  错误,如果成功则error为nil
+ */
+typedef void(^NIMSessionDeleteAllRemoteMessagesCompletionBlock)(NSError * _Nullable error);
+
+/**
+ * 批量单向删除消息的回调block
+ */
+typedef void(^NIMDeleteRemoteMessagesCompletionBlock)(NSError * _Nullable error);
 
 /**
  *  搜索本地消息记录Block
@@ -139,7 +165,7 @@ typedef void(^NIMFetchMigrateMessageCompletion)(NSError * __nullable error, NSSt
  *
  *  @param error  错误,如果成功则error为nil
  *  @param recentSessions 读取的消息列表
- *  @param minTimestamp 最小时间戳只有请求第一页时会返回这个参数，表示下一次增量同步时带在请求参数里
+ *  @param hasMore 最小时间戳只有请求第一页时会返回这个参数，表示下一次增量同步时带在请求参数里
  */
 typedef void(^NIMFetchRecentSessionsHistoryBlock)(NSError * __nullable error,
                                                  NSArray<NIMRecentSession *> * __nullable recentSessions,
@@ -162,6 +188,38 @@ typedef void(^NIMFetchRecentSessionHistoryBlock)(NSError * __nullable error,
 typedef void(^NIMRemoteRecentSessionBlock)(NSError * __nullable error);
 
 
+
+/**
+ *  批量更新未完整会话列表
+ *
+ *  @param error  错误,如果成功则error为nil
+ *  @param faileds  更新失败的会话
+ */
+typedef void(^NIMUpdateIncompleteSessionsBlock)(NSError * __nullable error, NSArray<NIMImportedRecentSession *> * __nullable faileds);
+
+/**
+ *  未完整会话信息
+ *
+ *  @param error  错误,如果成功则error为nil
+ *  @param result  更新失败的会话
+ */
+typedef void(^NIMIncompleteSessionsBlock)(NSError * __nullable error, NSArray<NIMIncompleteSessionInfo *> * __nullable result);
+
+/**
+ *  批量发送会话已读回调
+ *
+ *  @param error  错误,如果成功则error为nil
+ *  @param result  发送失败的会话
+ */
+typedef void(^NIMBatchSendACKSessionsBlock)(NSError * __nullable error, NSArray <NIMSession * > * _Nullable sessions);
+
+/**
+ *  发送会话已读回调
+ *
+ *  @param error  错误,如果成功则error为nil
+ */
+typedef void(^NIMSendACKSessionsBlock)(NSError * __nullable error);
+
 /**
  清空会话消息完成时状态回调
  */
@@ -183,7 +241,7 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
 /**
 *  最近会话数据库读取完成
 *
-*  @discussion 所有最近会话读取完成。设置NIMSDKConfig中的asyncLoadRecentSessionEnabled属性为YES时，此回调会执行。
+*  @discussion 所有最近会话读取完成。设置NIMSDKConfig中的asyncLoadRecentSessionEnabled属性为YES时，且本地数目大于1000条时，此回调会执行。
 *              该回调执行表示最近会话全部加载完毕可以通过allRecentSessions来取全部对话。
 */
 - (void)didLoadAllRecentSessionCompletion;
@@ -248,10 +306,51 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
 /**
  *  会话服务，会话更新
  *
- *  @param 会话
+ *  @param recentSession 最近会话
  */
 - (void)didServerSessionUpdated:(nullable NIMRecentSession *)recentSession;
 
+/**
+ *  消息单向删除通知
+ *  @deprecated 请使用 - onRecvMessagesDeleted: exts:
+ *
+ *  @param message 被删除消息
+ *  @param ext     扩展消息
+ */
+- (void)onRecvMessageDeleted:(NIMMessage *)message ext:(nullable NSString *)ext __attribute__((deprecated("请使用 - onRecvMessagesDeleted: exts:")));
+
+/**
+ *  消息单向删除通知
+ *
+ *  @param message 被删除消息
+ *  @param exts     删除时的扩展字段字典，key: messageId，value: ext
+ */
+- (void)onRecvMessagesDeleted:(NSArray<NIMMessage *> *)messages exts:(nullable NSDictionary<NSString *, NSString *> *)exts;
+
+/**
+ *  未漫游完整会话列表回调
+ *  @param infos 未漫游完整的会话信息
+ */
+- (void)onRecvIncompleteSessionInfos:(nullable NSArray<NIMIncompleteSessionInfo *> *)infos;
+
+/**
+ *  标记已读回调
+ *  @param session session
+ *  @param error 失败原因
+ */
+- (void)onMarkMessageReadCompleteInSession:(NIMSession *)session error:(nullable NSError *)error;
+
+/**
+ *  批量标记已读的回调
+ *  @param session session
+*/
+- (void)onBatchMarkMessagesReadInSessions:(NSArray<NIMSession *> *)sessions;
+
+/**
+ * 远端消息清空的通知
+ * @param info 清空会话的信息
+ */
+- (void)onRecvAllRemoteMessagesInSessionDeleted:(NIMSessionDeleteAllRemoteMessagesInfo *)info;
 
 @end
 
@@ -316,6 +415,26 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
 - (void)deleteMessage:(NIMMessage *)message;
 
 /**
+*  删除某条消息
+*
+*  @param message 待删除的聊天消息
+*  @param option 删除消息选项
+*/
+- (void)deleteMessage:(NIMMessage *)message
+               option:(nullable NIMDeleteMessageOption *)option;
+
+/**
+ *  删除本地某条消息，同时删除服务端历史、漫游
+ *
+ *  @param message  待删除的聊天消息
+ *  @param ext      扩展字段
+ *  @param block    完成回调
+ */
+- (void)deleteMessageFromServer:(NIMMessage *)message
+                            ext:(nullable NSString *)ext
+                     completion:(nullable NIMRemoveRemoteMessageBlock)block;
+
+/**
  *  删除某个会话的所有消息
  *
  *  @param session 待删除会话
@@ -345,12 +464,44 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
                      completion:(nullable NIMBatchDeleteMessagesBlock)block;
 
 /**
+ * 删除某个会话的所有本地和云端的历史消息。删除后，查询云端消息历史的接口将不能返回这些消息。
+ *
+ * @param session 目标会话
+ * @param options 清空消息历史的可选项
+ * @param block 清空完成后的回调
+ */
+- (void)deleteAllRemoteMessagesInSession:(NIMSession *)session
+                                 options:(NIMSessionDeleteAllRemoteMessagesOptions *)options
+                              completion:(NIMSessionDeleteAllRemoteMessagesCompletionBlock)completion;
+
+/**
+ * 批量删除消息，同时删除服务端和本地。所有传入的消息必需属于同一个会话。
+ *
+ * @param messages 消息数组
+ * @param exts key为消息id，value为删除该消息所对应的扩展信息
+ * @param completion 删除完成的回调
+ */
+- (void)deleteRemoteMessages:(NSArray<NIMMessage *> *)messages
+                        exts:(nullable NSDictionary<NSString *,NSString *> *)exts
+                  completion:(nullable NIMDeleteRemoteMessagesCompletionBlock)completion;
+
+/**
  *  增加某个最近会话
  *
  *  @param session 待增加的最近会话
  *  @discussion 异步方法
  */
 - (void)addEmptyRecentSessionBySession:(NIMSession *)session;
+
+/**
+ *  增加某个最近会话
+ *
+ *  @param session 待增加的最近会话
+ *  @param option 配置项
+ *  @discussion 异步方法
+ */
+- (void)addEmptyRecentSessionBySession:(NIMSession *)session
+                                option:(NIMAddEmptyRecentSessionBySessionOption *) option;
 
 /**
  *  删除某个最近会话
@@ -361,12 +512,35 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
 - (void)deleteRecentSession:(NIMRecentSession *)recentSession;
 
 /**
+*  删除某个最近会话
+*
+*  @param recentSession 待删除的最近会话
+*  @param option 是否删除漫游选项，isDeleteRoamMessage默认为NO
+*  @param completion 结果回调
+*  @discussion 异步方法，删除最近会话，但保留会话内消息
+*/
+- (void)deleteRecentSession:(NIMRecentSession *)recentSession option:(NIMDeleteRecentSessionOption *)option completion:(NIMRemoveRemoteSessionBlock)completion;
+/**
  *  设置所有会话消息为已读
  *
  *  @discussion 异步方法，消息会标记为设置的状态。不会触发单条 recentSession 更新的回调，但会触发回调 - (void)allMessagesRead
  */
 - (void)markAllMessagesRead;
 
+/**
+ *  批量设置多个会话消息已读
+ *
+ *  @discussion 异步方法。不会触发单条 recentSession 更新的回调，但会触发回调 - onBatchMarkMessagesReadInSessions:
+*/
+- (void)batchMarkMessagesReadInSessions:(NSArray<NIMSession *> *)sessions;
+
+/**
+ *  批量设置多个会话消息已读
+ *
+ *  @param completion 结果回调。部分成功时，可以从NIMBatchSendACKSessionsBlock的sessions参数得到失败的会话
+ *  @discussion 异步方法。不会触发单条 recentSession 更新的回调，但会触发回调 - onBatchMarkMessagesReadInSessions:
+*/
+- (void)batchMarkMessagesReadInSessions:(NSArray<NIMSession *> *)sessions completion:(NIMBatchSendACKSessionsBlock)completion;
 
 /**
  *  设置一个会话里所有消息置为已读
@@ -375,6 +549,15 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
  *  @discussion 异步方法，消息会标记为设置的状态
  */
 - (void)markAllMessagesReadInSession:(NIMSession *)session;
+
+/**
+ *  设置一个会话里所有消息置为已读
+ *
+ *  @param session 需设置的会话
+ *  @param session 结果回调
+ *  @discussion 异步方法，消息会标记为设置的状态
+ */
+- (void)markAllMessagesReadInSession:(NIMSession *)session completion:(NIMSendACKSessionsBlock)completion;
 
 
 
@@ -429,6 +612,18 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
                                               message:(nullable NIMMessage *)message
                                                 limit:(NSInteger)limit;
 
+/**
+ *  从本地db读取一个会话里某条消息之前的若干条的消息
+ *
+ *  @param session 消息所属的会话
+ *  @param message 当前最早的消息,没有则传入nil
+ *  @param limit   个数限制
+ *  @param completion 完成后的回调
+ */
+- (void)messagesInSession:(NIMSession *)session
+                  message:(nullable NIMMessage *)message
+                    limit:(NSInteger)limit
+               completion:(NIMFetchMessageHistoryBlock)completion;
 
 /**
  *  根据消息Id获取消息
@@ -457,6 +652,10 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
  *  @discussion 群只有 notify state != NIMTeamNotifyStateNone 才算是不允许通知
  */
 - (NSInteger)allUnreadCount:(BOOL)notify;
+
+- (NSArray *)allUnreadMessagesInSession: (NIMSession *)session;
+
+- (void)allUnreadMessagesInSession: (NIMSession *)session completion:(NIMFetchMessageHistoryBlock)completion;
 
 /**
  *  获取所有最近会话。
@@ -563,6 +762,21 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
                         option:(NIMMessageServerRetrieveOption *)option
                         result:(nullable NIMRetrieveServerMessagesBlock)result;
 
+
+
+
+/**
+ *  根据关键字从服务器上全量检索消息
+ *
+ *  @param session 消息所属的会话
+ *  @param option  检索选项
+ *  @param result  读取的消息列表结果
+ *  @discussion    检索消息内容，此接口仅支持查询P2P和群聊消息，不支持聊天室和超大群
+ *
+ */
+- (void)retrieveServerMessages:(NIMMessageFullKeywordSearchOption *)option
+                        result:(nullable NIMRetrieveServerMessagesBlock)result;
+
 /**
  *  搜索本地会话内消息
  *
@@ -597,12 +811,12 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
                   completion:(nullable NIMRemoveRemoteSessionBlock)completion;
 
 /**
- *  清空点对点会话对应本地和服务端的消息
+ *  清空点对点会话对应服务端的消息
  *
  *  @param session 目标会话列表
  *  @param option 清空消息选项
  *  @param completion 完成回调
- *  @discussion 只支持点对点，清空本用户的本地和服务端消息，不影响对方；如果不设置清空选项，服务端默认会同时清空漫游消息；
+ *  @discussion 只支持点对点，清空本用户的服务端消息，不影响对方；如果不设置清空选项，服务端默认会同时清空漫游消息；
  */
 - (void)deleteSelfRemoteSession:(NIMSession *)session
                          option:(nullable NIMClearMessagesOption *)option
@@ -685,6 +899,46 @@ typedef NS_ENUM(NSUInteger, NIMClearMessagesStatus)
  @discussion  此接口用于序列化消息，请与decodeMessageFromData配套使用，用于实现消息本地序列化
 */
 - (NSData *)encodeMessageToData:(NIMMessage *)message;
+
+
+#pragma mark - 漫游消息未完整会话接口
+
+/**
+ 查询漫游消息未完整会话信息
+
+ @param session 目标会话
+ @param completion 结果完成回调
+*/
+- (void)incompleteSessionInfoBySession:(NIMSession *)session
+                            completion:(nullable NIMIncompleteSessionsBlock)completion;
+/**
+ 查询所有漫游消息未漫游完整会话信息
+
+ @param completion 结果完成回调
+*/
+- (void)allIncompleteSessionInfos:(NIMIncompleteSessionsBlock)completion;
+
+/**
+ 更新未漫游完整会话列表
+
+ @param messages 消息对象，使用NIMMessage的会话、severId、timestamp、from等去更新b
+ @param completion 结果完成回调
+*/
+- (void)updateIncompleteSessions:(NSArray<NIMMessage *> *)messages
+                      completion:(nullable NIMUpdateIncompleteSessionsBlock)completion;
+
+/**
+ 根据会话移除未漫游完整会话信息
+ 
+ @param session 目标会话
+ */
+- (void)removeIncompleteSessionInfoBySession:(NIMSession *)session;
+
+/**
+ 移除所有未完整会话信息
+ */
+- (void)removeAllIncompleteSessionInfos;
+
 
 /**
  *  添加通知对象

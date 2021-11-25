@@ -52,6 +52,10 @@ typedef NS_ENUM(NSInteger, NIMMessageType){
      */
     NIMMessageTypeRobot         = 11,
     /**
+     *  Rtc通话单
+     */
+    NIMMessageTypeRtcCallRecord = 12,
+    /**
      *  自定义类型消息
      */
     NIMMessageTypeCustom        = 100
@@ -242,6 +246,10 @@ typedef NS_ENUM(NSInteger, NIMRemoteErrorCode) {
      */
     NIMRemoteErrorCodeExist               = 417,
     /**
+     *  数量超限
+     */
+    NIMRemoteErrorCodeBeyondLimit         = 419,
+    /**
      *  账号被禁用
      */
     NIMRemoteErrorAccountBlock            = 422,
@@ -309,6 +317,10 @@ typedef NS_ENUM(NSInteger, NIMRemoteErrorCode) {
      *  在群黑名单中
      */
     NIMRemoteErrorCodeTeamBlackList       = 812,
+    /**
+     *  请求群信息列表部分成功
+     */
+    NIMRemoteErrorCodeTeamsPartialSuccess = 816,
     /**
      *  解包错误
      */

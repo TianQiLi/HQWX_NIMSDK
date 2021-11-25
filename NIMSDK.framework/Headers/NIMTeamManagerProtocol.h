@@ -485,7 +485,31 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)searchTeamWithOption:(NIMTeamSearchOption *)option
                   completion:(NIMTeamSearchHandler)completion;
 
+/**
+ *  更新群本地信息
+ *
+ *  @param teams    需要更新的群对象
+ *  @discussion     这个用于修改本地群信息，不会同步到服务端
+ */
+- (BOOL)updateTInfosLocal:(NSArray<NIMTeam *> *) teams;
 
+
+/**
+ *  获取所有群信息
+ *
+ *  @param timestamp   0表示全量获取群信息
+ *  @param block        完成后的回调
+ *  @discussion 从服务端全量拉取群信息，并做本地持久化
+ */
+- (void)fetchTeamsWithTimestamp:(NSTimeInterval)timestamp completion:(nullable NIMTeamFetchTeamsHandler)block;
+/**
+*  获取指定群ID的群信息
+*
+*  @param teamIds      群ID列表,数组元素超过10个会取前10个
+*  @param block        完成后的回调
+*  @discussion 从服务端全量拉取群信息，不做本地持久化
+*/
+- (void)fetchTeamInfoList:(NSArray <NSString *>*)teamIds completion:(NIMTeamFetchTeamInfoListHandler)block;
 /**
  *  添加群组委托
  *

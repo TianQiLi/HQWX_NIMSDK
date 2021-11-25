@@ -9,6 +9,12 @@
 #import <Foundation/Foundation.h>
 #import "NIMLoginClient.h"
 
+#ifndef NIMDeprecated
+#define NIMDeprecated(msg) __attribute__((deprecated(msg)))
+#endif
+
+@class NIMLoginKickoutResult;
+
 NS_ASSUME_NONNULL_BEGIN
 /**
  *  登录服务相关Block
@@ -95,6 +101,17 @@ typedef NS_ENUM(NSInteger, NIMSDKAuthMode)
 };
 
 /**
+ *  SDK 认证类型
+ *  0表示最初的loginToken的校验方式，1表示基于appSecret计算的token鉴权方式，2表示基于第三方回调的token鉴权方式，默认0
+ */
+typedef NS_ENUM(NSInteger, NIMSDKAuthType)
+{
+    NIMSDKAuthTypeDefault = 0,
+    NIMSDKAuthTypeDynamicToken = 1,
+    NIMSDKAuthTypeThirdParty = 2,
+};
+
+/**
  *  被踢下线的原因
  */
 typedef NS_ENUM(NSInteger, NIMKickReason)
@@ -140,10 +157,19 @@ typedef NS_ENUM(NSInteger, NIMMultiLoginType){
 /**
  *  被踢(服务器/其他端)回调
  *
+ * @deprecated 请使用- (void)onKickout:(NIMLoginKickoutResult *)result;
+ *
  *  @param code        被踢原因
  *  @param clientType  发起踢出的客户端类型
  */
-- (void)onKick:(NIMKickReason)code clientType:(NIMLoginClientType)clientType;
+- (void)onKick:(NIMKickReason)code clientType:(NIMLoginClientType)clientType NIMDeprecated("Use -onKickout: instead");
+
+/**
+ *  被踢(服务器/其他端)回调
+*
+ *  @param result        被踢原因
+ */
+- (void)onKickout:(NIMLoginKickoutResult *)result;
 
 /**
  *  登录回调
@@ -184,6 +210,13 @@ typedef NS_ENUM(NSInteger, NIMMultiLoginType){
  */
 - (void)onSuperTeamUsersSyncFinished:(BOOL)success;
 
+/**
+ *  提供动态登陆Token
+ */
+- (NSString *)provideDynamicTokenForAccount:(NSString *)account;
+
+- (int)reconnectDelay;
+
 @end
 
 /**
@@ -202,6 +235,11 @@ typedef NS_ENUM(NSInteger, NIMMultiLoginType){
         token:(NSString *)token
    completion:(NIMLoginHandler)completion;
 
+- (void)login:(NSString *)account
+        token:(NSString *)token
+     authType:(int)authType
+     loginExt:(NSString *)loginExt
+   completion:(NIMLoginHandler)completion;
 
 /**
  *  自动登录

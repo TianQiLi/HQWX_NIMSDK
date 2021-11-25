@@ -71,6 +71,11 @@ typedef NS_ENUM(NSInteger, NIMLoginClientType) {
  *  自定义信息，最大32个字符；目前android多端登录，TV端和手表端，可以通过该字段区分
  */
 @property (nullable,nonatomic,copy,readonly)     NSString *customTag;
+/**
+*  自定义登录端类型
+*/
+@property (nonatomic,assign,readonly)   NSInteger               customClientType;
+
 @end
 
 
@@ -89,6 +94,11 @@ typedef NS_ENUM(NSInteger, NIMLoginClientType) {
  *  令牌(在后台绑定的登录token)
  */
 @property (nonatomic,copy)      NSString    *token;
+
+
+@property (nonatomic)       int authType;
+
+@property (nonatomic,copy)  NSString *loginExtension;
 
 /**
  *  强制模式

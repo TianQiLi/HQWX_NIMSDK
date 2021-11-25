@@ -13,6 +13,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @class NIMMessage;
 
+/**
+*  云端消息自定义过滤回调
+*
+*  @param message 待过滤的消息
+*  @discussion 返回YES表示该消息被过滤，不入库不会在历史消息结果中返回；返回NO，表示正常处理该消息。
+*/
+typedef BOOL(^NIMHistoryMessageFilterBlock)(NIMMessage *message);
+
 
 /**
  *  搜索顺序
@@ -66,6 +74,12 @@ typedef NS_ENUM(NSInteger,NIMMessageSearchOrder) {
 @property (nonatomic,copy)    NSArray<NSNumber *> *messageTypes;
 
 /**
+*  查询的消息子类型
+*  @discusssion 消息子类型组合
+*/
+@property (nonatomic,strong)  NSArray<NSNumber *> *messageSubTypes;
+
+/**
  *  全部消息类型
  *  @discussion 默认为 NO
  */
@@ -114,10 +128,16 @@ typedef NS_ENUM(NSInteger,NIMMessageSearchOrder) {
 
 
 /**
- *  检索消息的当前参考消息,返回的消息结果集里不会包含这条消息,此参数对聊天室会话无效。
+ *  检索消息的当前参考消息,返回的消息结果集里不会包含这条消息,此参数对聊天室会话无效。优先级低于下面的serverId
  *  @discussion 传入最早时间,没有则传入nil。
  */
 @property (nullable,nonatomic,strong)      NIMMessage      *currentMessage;
+
+/**
+ *  检索消息的当前参考消息,返回的消息结果集里不会包含这条serverId对应的消息,此参数对聊天室会话无效。优先级高于 上面currentMessage的serverId
+ *  @discussion 传入最早时间,没有则传入nil。
+ */
+@property (nullable,nonatomic,copy)      NSString      *serverId;
 
 
 /**
@@ -148,6 +168,17 @@ typedef NS_ENUM(NSInteger,NIMMessageSearchOrder) {
 */
 @property (nonatomic,assign)      BOOL             syncMessageTypes;
 
+/**
+*  自定义消息过滤
+*  @discusssion 自定义外部过滤回调方法。返回YES表示消息被过滤，不入库不回调，返回NO，表示消息正常入库和回调
+*  回调在内部工作线程，注意不要再该回调中执行阻塞或者耗时操作，防止影响内部的消息处理流程。
+*/
+@property (nullable,nonatomic,strong)  NIMHistoryMessageFilterBlock customFilter;
+
+/**
+ * 同步云端消息到到本地时，如果消息所在的最近会话不存在，是否自动创建。默认为NO。
+ */
+@property (nonatomic,assign) BOOL createRecentSessionIfNotExists;
 
 @end
 
@@ -185,6 +216,80 @@ typedef NS_ENUM(NSInteger,NIMMessageSearchOrder) {
  *  关键字
  */
 @property (nullable,nonatomic,copy)      NSString *keyword;
+
+@end
+
+
+/**
+ *  服务端消息全量检索选项
+ *  @discussion 搜索条件: 时间在(startTime,endTime) 内(不包含)，类型为 messageTypes （或全类型） ，且匹配 searchContent 或 fromIds 的一定数量 (limit) 消息
+ */
+@interface NIMMessageFullKeywordSearchOption : NSObject
+
+/**
+ *  关键字
+ */
+@property (nullable,nonatomic,copy)      NSString *keyword;
+
+/**
+ *  起始时间,默认为0
+ */
+@property (nonatomic,assign)    NSTimeInterval startTime;
+
+
+/**
+ *  结束时间,默认为0
+ *  @discussion 搜索的结束时间,0 表示最大时间戳
+ */
+@property (nonatomic,assign)    NSTimeInterval endTime;
+
+/**
+ *  消息的检索条数
+ *  @discussion 消息条数限制
+ */
+@property (nonatomic,assign)    NSUInteger msgLimit;
+
+/**
+ *  会话的检索条数
+ *  @discussion 会话条数限制
+ */
+@property (nonatomic,assign)    NSUInteger sessionLimit;
+
+/**
+ * 检索结果的排列顺序
+ * @diacussion 如果为true，结果按照升序排列，如果为false，按照时间降序排列
+ */
+@property (nonatomic, assign) BOOL asc;
+
+/**
+ * P2P会话列表
+ * @discussion
+ */
+@property (nullable, nonatomic, copy)   NSArray *p2pArray;
+
+/**
+ * 群列表
+ * @discussion
+ */
+@property (nullable, nonatomic, copy)   NSArray *teamArray;
+
+/**
+ * 发送方列表
+ * @discussion
+ */
+@property (nullable, nonatomic, copy)   NSArray *senderArray;
+
+/**
+ * 消息类型列表
+ * @discussion
+ */
+@property (nullable, nonatomic, copy)   NSArray *msgTypeArray;
+
+/**
+ * 消息子类型列表
+ * @discussion
+ */
+@property (nullable, nonatomic, copy)   NSArray *msgSubtypeArray;
 
 @end
 

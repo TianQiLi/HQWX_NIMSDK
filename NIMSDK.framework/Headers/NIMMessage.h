@@ -21,6 +21,7 @@
 #import "NIMRobotObject.h"
 #import "NIMMessageSetting.h"
 #import "NIMMessageReceipt.h"
+#import "NIMRtcCallRecordObject.h"
 #import "NIMTeamMessageReceiptDetail.h"
 #import "NIMAntiSpamOption.h"
 #import "NIMMessageApnsMemberOption.h"
@@ -70,6 +71,15 @@ typedef NS_ENUM(NSInteger, NIMMessageAttachmentDownloadState){
     NIMMessageAttachmentDownloadStateDownloaded
 };
 
+/**
+ *  消息处理状态
+ */
+typedef NS_ENUM(NSInteger, NIMMessageStatus) {
+    NIMMessageStatusNone        =   0,      //消息初始状态
+    NIMMessageStatusRead        =   1,      //已读
+    NIMMessageStatusDeleted     =   2       //已删除 (必须是 message status 最大值)
+};
+
 
 
 /**
@@ -81,6 +91,11 @@ typedef NS_ENUM(NSInteger, NIMMessageAttachmentDownloadState){
  *  消息类型
  */
 @property (nonatomic,assign,readonly)       NIMMessageType messageType;
+
+/**
+*  消息子类型.(默认0。设置值需要大于0)
+*/
+@property (nonatomic,assign) NSInteger messageSubType;
 
 /**
  *  消息来源
@@ -128,13 +143,13 @@ typedef NS_ENUM(NSInteger, NIMMessageAttachmentDownloadState){
 
 
 /**
- *  消息推送文案,长度限制500字
+ *  消息推送文案,长度限制500字,撤回消息时该字段无效
  */
 @property (nullable,nonatomic,copy)                  NSString *apnsContent;
 
 /**
  *  消息推送Payload
- *  @discussion 可以通过这个字段定义消息推送 Payload ,支持字段参考苹果技术文档,长度限制 2K
+ *  @discussion 可以通过这个字段定义消息推送 Payload ,支持字段参考苹果技术文档,长度限制 2K,撤回消息时该字段无效
  */
 @property (nullable,nonatomic,copy)                NSDictionary *apnsPayload;
 
@@ -168,6 +183,33 @@ typedef NS_ENUM(NSInteger, NIMMessageAttachmentDownloadState){
  *  @discussion 本地存储消息可以通过修改时间戳来调整其在会话列表中的位置，发完服务器的消息时间戳将被服务器自动修正
  */
 @property (nonatomic,assign)                NSTimeInterval timestamp;
+
+/**
+*  易盾反垃圾增强反作弊专属字段
+*  @discussion 透传易盾反垃圾增强反作弊专属字段
+*/
+@property (nullable,nonatomic,copy) NSDictionary *yidunAntiCheating;
+
+/**
+ * 易盾反垃圾扩展字段，限制json，长度限制1024
+ */
+@property (nullable,nonatomic,copy) NSString *yidunAntiSpamExt;
+
+/**
+ * 易盾反垃圾返回的结果字段
+ */
+@property (nullable,nonatomic,copy) NSString *yidunAntiSpamRes;
+
+/**
+*  消息的目标标签表达式
+*/
+@property (nullable,nonatomic,copy) NSString *notifyTargetTags;
+
+/**
+*  环境变量
+*  @discussion 环境变量，用于指向不同的抄送、第三方回调等配置
+*/
+@property (nullable,nonatomic,copy) NSString *env;
 
 /**
  *  消息投递状态 仅针对发送的消息
@@ -244,6 +286,81 @@ typedef NS_ENUM(NSInteger, NIMMessageAttachmentDownloadState){
  *  @discussion YES 为被目标拉黑;
  */
 @property (nonatomic,assign,readonly) BOOL isBlackListed;
+
+#pragma mark - Thread Talk
+
+/**
+ *  该消息回复的目标消息的消息ID
+ *  @discussion 如果未回复其他消息，则为空
+ *  @discussion A为一条普通消息,B消息为对A回复的消息,则A是B的 replied 消息和 thread 消息; 同时, C为回复B的消息,则C的 replied 消息是B, C的thread消息为A
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *repliedMessageId;
+
+/**
+ *  该消息回复的目标消息的服务端ID
+ *  @discussion 如果未回复其他消息，则为空
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *repliedMessageServerId;
+
+/**
+ *  该消息回复的目标消息的发送者
+ *  @discussion 如果未回复其他消息，则为空
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *repliedMessageFrom;
+
+/**
+ *  该消息回复的目标消息的接收者
+ *  @discussion 如果未回复其他消息，则为空
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *repliedMessageTo;
+
+/**
+ *  该消息回复的目标消息的发送时间
+ *  @discussion 如果未回复其他消息则为0（单位：秒）
+ */
+@property (nonatomic,assign,readonly) NSTimeInterval repliedMessageTime;
+
+
+/**
+ *  该消息的父消息的消息ID
+ *  @discussion 如果未回复其他消息，则为空
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *threadMessageId;
+
+/**
+ *  该消息的父消息的服务端ID
+ *  @discussion 如果未回复其他消息，则为空
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *threadMessageServerId;
+
+/**
+ *  该消息回复的父消息的发送者
+ *  @discussion 如果未回复其他消息，则为空
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *threadMessageFrom;
+
+/**
+ *  该消息回复的目标消息的接收者
+ *  @discussion 如果未回复其他消息，则为空
+ */
+@property (nullable,nonatomic,copy,readonly) NSString *threadMessageTo;
+
+/**
+ *  该消息回复的父消息的发送时间
+ *  @discussion 如果未回复其他消息则为0（单位：秒）
+ */
+@property (nonatomic,assign,readonly) NSTimeInterval threadMessageTime;
+
+/**
+ *  第三方回调回来的自定义扩展字段
+ */
+@property (nonatomic,copy,readonly) NSString *callbackExt;
+
+
+/**
+ *  消息处理状态
+ */
+@property (nonatomic, assign) NIMMessageStatus status;
 
 @end
 

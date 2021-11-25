@@ -13,6 +13,7 @@
 @class NIMMessageReceipt;
 @class NIMRevokeMessageNotification;
 @class NIMTeamMessageReceiptDetail;
+@class NIMRevokeMessageOption;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -45,6 +46,14 @@ typedef void(^NIMRevokeMessageBlock)(NSError * __nullable error);
  *  @param detail     已读回执详情
  */
 typedef void(^NIMQueryReceiptDetailBlock)(NSError * __nullable error,NIMTeamMessageReceiptDetail * __nullable detail);
+
+
+/**
+ *  操作完成回调
+ *
+ *  @param error      错误,如果成功则error为nil
+ */
+typedef void(^NIMChatManagerBlock)(NSError * __nullable error);
 
 
 /**
@@ -165,7 +174,7 @@ typedef void(^NIMQueryReceiptDetailBlock)(NSError * __nullable error,NIMTeamMess
  */
 - (void)sendMessage:(NIMMessage *)message
           toSession:(NIMSession *)session
-         completion:(nullable void(^)(NSError * __nullable error))completion;
+         completion:(__nullable NIMChatManagerBlock)completion;
 
 
 /**
@@ -246,15 +255,72 @@ typedef void(^NIMQueryReceiptDetailBlock)(NSError * __nullable error,NIMTeamMess
  */
 - (void)queryMessageReceiptDetail:(NIMMessage *)message
                        completion:(NIMQueryReceiptDetailBlock)completion;
+/**
+ * 查询群组消息指定用户的回执详情
+ *
+ * @param message 待查询的消息
+ * @param accountSet 指定的用户的账号组成的NSSet
+ * @return 该消息的已读、未读账号列表
+ */
+- (void)queryMessageReceiptDetail:(NIMMessage *)message
+                     accountSet:(NSSet *)accountSet
+                       completion:(NIMQueryReceiptDetailBlock)completion;
 
+/**
+* 从本地数据库查询单条群组消息已读、未读账号列表
+* 注意！！！：这里获取的数据通常比离线前的列表信息更陈旧
+*
+* @param message 待查询的消息
+* @return 该消息的已读、未读账号列表
+*/
+- (nullable NIMTeamMessageReceiptDetail *)localMessageReceiptDetail:(NIMMessage *)message;
+
+/**
+* 从本地数据库查询单条群组消息在指定用户中的已读、未读账号列表（同步接口）
+* 注意！！！：这里获取的数据通常比离线前的列表信息更陈旧
+*
+* @param message 待查询的消息
+* @param accountSet 指定的用户的账号组成的NSSet
+* @return 该消息的已读、未读账号列表
+*/
+- (nullable NIMTeamMessageReceiptDetail *)localMessageReceiptDetail:(NIMMessage *)message
+                                                       accountSet:(NSSet *)accountSet;
+
+/**
+ *  撤回消息,不含推送信息
+ *
+ *  @param message    需要被撤回的消息
+ *  @param completion 完成回调
+ *  @discussion 消息计入未读数
+ */
+- (void)revokeMessage:(NIMMessage *)message
+           completion:(nullable NIMRevokeMessageBlock)completion;
 
 /**
  *  撤回消息
  *
- *  @param message    需要被撤回的消息
- *  @param completion 完成回调
+ *  @param message        需要被撤回的消息
+ *  @param apnsContent    云信推送内容,长度限制500字
+ *  @param apnsPayload    云信推送payload信息,长度限制 2K
+ *  @param should         是否计入未读数
+ *  @param completion     完成回调
  */
 - (void)revokeMessage:(NIMMessage *)message
+          apnsContent:(nullable NSString *)apnsContent
+          apnsPayload:(nullable NSDictionary *)apnsPayload
+      shouldBeCounted:(BOOL)should
+           completion:(nullable NIMRevokeMessageBlock)completion;
+
+/**
+*  撤回消息
+*
+*  @param message    需要被撤回的消息
+*  @param option     撤回的配置选项
+*  @param completion 完成回调
+*  @discussion 消息计入未读数
+*/
+- (void)revokeMessage:(NIMMessage *)message
+               option:(NIMRevokeMessageOption *)option
            completion:(nullable NIMRevokeMessageBlock)completion;
 
 
