@@ -7,11 +7,15 @@ Pod::Spec.new do |spec|
  spec.license = { :'type' => 'Copyright', :'text' => ' Copyright 2020 Netease '}   
  spec.authors = 'Netease IM Team'  
  
+ #spec.source = { :path => "."}
  spec.source = { :git => "https://github.com/TianQiLi/HQWX_NIMSDK.git", :tag => "#{spec.version}" }
- spec.platform = :ios, '8.0'  
+ spec.platform = :ios, '9.0'  
  spec.vendored_frameworks = 'NIMSDK.framework'
  spec.frameworks = 'SystemConfiguration', 'AVFoundation', 'CoreTelephony', 'AudioToolbox', 'CoreMedia' , 'VideoToolbox'  
  spec.libraries = 'sqlite3.0', 'z', 'c++'
 
+ spec.pod_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
+ spec.user_target_xcconfig = { 'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'arm64' }
+ 
 end   
 
